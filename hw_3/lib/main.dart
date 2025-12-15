@@ -1,165 +1,102 @@
-import 'dart:math';
-import 'package:flutter/material.dart';
 
+import 'package:flutter/material.dart';
 void main() {
-  runApp(const CalculatorApp());
+  runApp(const MyApp());
 }
 
-class CalculatorApp extends StatelessWidget {
-  const CalculatorApp({super.key});
+/* ---------- Root App ---------- */
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: CalculatorPage(),
+      title: 'Calculator UI',
+      home: CalApp(),
     );
   }
 }
 
-class CalculatorPage extends StatefulWidget {
-  const CalculatorPage({super.key});
+/* ---------- Calculator Page ---------- */
+class CalApp extends StatefulWidget {
+  const CalApp({super.key});
 
   @override
-  State<CalculatorPage> createState() => _CalculatorPageState();
+  State<CalApp> createState() => _CalAppState();
 }
 
-class _CalculatorPageState extends State<CalculatorPage> {
-  String display = "0";
+class _CalAppState extends State<CalApp> {
+  String num1 = "";
+  String num2 = "";
   String operator = "";
-  double firstNum = 0;
-  double secondNum = 0;
-  double percentValue = 0;
+  String display = "0";
 
-  final Color bgColor = const Color(0xFF22252D);
-  final Color numberBtn = const Color(0xFF2A2D37);
-  final Color funcBtn = const Color(0xFFF69906);
-  final Color controlBtn = const Color(0xFF4E505F);
-
-  void buttonPressed(String value) {
+  void pressNumber(String num) {
     setState(() {
-      // A. CLEAR
-      if (value == "C") {
-        display = "0";
-        operator = "";
-        firstNum = 0;
-        secondNum = 0;
-        percentValue = 0;
-        return;
-      }
-
-      // A. DEL
-      if (value == "DEL") {
-        if (display.length > 1) {
-          display = display.substring(0, display.length - 1);
-        } else {
-          display = "0";
-        }
-        return;
-      }
-
-      // D. SQUARE ROOT
-      if (value == "√") {
-        double num = double.parse(display);
-        display = sqrt(num).toString();
-        if (display.endsWith(".0")) {
-          display = display.replaceAll(".0", "");
-        }
-        return;
-      }
-
-      // C. POWER
-      if (value == "^") {
-        firstNum = double.parse(display);
-        operator = "^";
-        display = "0";
-        return;
-      }
-
-      // B. PERCENT
-      if (value == "%") {
-        percentValue = double.parse(display);
-        operator = "%";
-        display = "0";
-        return;
-      }
-
-      // OPERATORS
-      if (["+", "-", "×", "÷"].contains(value)) {
-        firstNum = double.parse(display);
-        operator = value;
-        display = "0";
-        return;
-      }
-
-      // DECIMAL
-      if (value == ".") {
-        if (!display.contains(".")) {
-          display += ".";
-        }
-        return;
-      }
-
-      // EQUAL
-      if (value == "=") {
-        secondNum = double.parse(display);
-
-        switch (operator) {
-          case "+":
-            display = (firstNum + secondNum).toString();
-            break;
-          case "-":
-            display = (firstNum - secondNum).toString();
-            break;
-          case "×":
-            display = (firstNum * secondNum).toString();
-            break;
-          case "÷":
-            display = secondNum == 0 ? "Error" : (firstNum / secondNum).toString();
-            break;
-          case "^":
-            display = pow(firstNum, secondNum).toString();
-            break;
-          case "%":
-            display = ((percentValue / 100) * secondNum).toString();
-            break;
-        }
-
-        if (display.endsWith(".0")) {
-          display = display.replaceAll(".0", "");
-        }
-
-        operator = "";
-        return;
-      }
-
-      // NUMBER INPUT
-      if (display == "0") {
-        display = value;
+      if (operator.isEmpty) {
+        num1 += num;
+        display = num1;
       } else {
-        display += value;
+        num2 += num;
+        display = num2;
       }
     });
   }
 
-  Widget buildButton(String text, Color color, {int flex = 1}) {
-    return Expanded(
-      flex: flex,
-      child: Container(
-        margin: const EdgeInsets.all(6),
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: color,
-            padding: const EdgeInsets.symmetric(vertical: 22),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-          onPressed: () => buttonPressed(text),
-          child: Text(
-            text,
-            style: const TextStyle(fontSize: 24, color: Colors.white),
-          ),
+  void pressOperator(String op) {
+    setState(() {
+      operator = op;
+    }); 
+  }
+
+  void clear() {
+    setState(() {
+      num1 = "";
+      num2 = "";
+      operator = "";
+      display = "0";
+    });
+  }
+
+  void calculate() {
+    if (num1.isNotEmpty || num2.isNotEmpty || operator.isNotEmpty) {
+      double n1 = double.parse(num1);
+      double n2 = double.parse(num2);
+      double result = 0;
+
+      switch (operator) {
+        case "+":
+          result = n1 + n2;
+          break;
+        case "-":
+          result = n1 - n2;
+          break;
+        case "*":
+          result = n1 * n2;
+          break;
+        case "/":
+          result = n1 / n2;
+          break;
+      }
+
+      setState(() {
+        display = result.toString();
+        num1 = result.toString();
+        num2 = "";
+        operator = "";
+      });
+    }
+  }
+  
+
+  Widget calcBtn(String text, VoidCallback onPressed) {
+    return Padding(
+      padding: const EdgeInsets.all(6),
+      child: FloatingActionButton(
+        onPressed: onPressed,
+        child: Text(
+          text,
+          style: const TextStyle(fontSize: 22),
         ),
       ),
     );
@@ -168,56 +105,58 @@ class _CalculatorPageState extends State<CalculatorPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: bgColor,
-      body: SafeArea(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            // DISPLAY
-            Container(
-              padding: const EdgeInsets.all(20),
-              alignment: Alignment.bottomRight,
-              child: Text(
-                display,
-                style: const TextStyle(fontSize: 56, color: Colors.white),
-              ),
-            ),
+      appBar: AppBar(
+        title: const Text('My App'),
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            display,
+            style: const TextStyle(fontSize: 40, color: Colors.red),
+          ),
+          const SizedBox(height: 20),
 
-            Row(children: [
-              buildButton("C", controlBtn),
-              buildButton("DEL", controlBtn),
-              buildButton("%", controlBtn),
-              buildButton("√", funcBtn),
-            ]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              calcBtn("7", () => pressNumber("7")),
+              calcBtn("8", () => pressNumber("8")),
+              calcBtn("9", () => pressNumber("9")),
+              calcBtn("+", () => pressOperator("+")),
+            ],
+          ),
 
-            Row(children: [
-              buildButton("7", numberBtn),
-              buildButton("8", numberBtn),
-              buildButton("9", numberBtn),
-              buildButton("÷", funcBtn),
-            ]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              calcBtn("4", () => pressNumber("4")),
+              calcBtn("5", () => pressNumber("5")),
+              calcBtn("6", () => pressNumber("6")), 
+              calcBtn("-", () => pressOperator("-")),
+            ],
+          ),
 
-            Row(children: [
-              buildButton("4", numberBtn),
-              buildButton("5", numberBtn),
-              buildButton("6", numberBtn),
-              buildButton("×", funcBtn),
-            ]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              calcBtn("1", () => pressNumber("1")),
+              calcBtn("2", () => pressNumber("2")),
+              calcBtn("3", () => pressNumber("3")),
+              calcBtn("*", () => pressOperator("*")),
+            ],
+          ),
 
-            Row(children: [
-              buildButton("1", numberBtn),
-              buildButton("2", numberBtn),
-              buildButton("3", numberBtn),
-              buildButton("-", funcBtn),
-            ]),
-
-            Row(children: [
-              buildButton("0", numberBtn, flex: 2),
-              buildButton("^", funcBtn),
-              buildButton("=", funcBtn),
-            ]),
-          ],
-        ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              calcBtn("0", () => pressNumber("0")),
+              calcBtn("C", () => clear()),
+              calcBtn("=", () => calculate()),
+              calcBtn("/", () => pressOperator("/")),
+            ],
+          ),
+        ],
       ),
     );
   }
